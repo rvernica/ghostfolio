@@ -97,6 +97,29 @@
         </mat-card-content>
       </mat-card>
     </div>
+    <div class="col-md-12">
+      <mat-card appearance="outlined" class="mb-3">
+        <mat-card-header class="overflow-hidden w-100">
+          <mat-card-title class="align-items-center d-flex text-truncate">
+            <span i18n>By Allocation Model</span>
+            @if (user?.subscription?.type === 'Basic') {
+              <gf-premium-indicator class="ms-1" />
+            }
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <gf-allocation-model-comparison
+            [colorScheme]="user?.settings?.colorScheme"
+            [holdings]="portfolioDetails.holdings"
+            [isComparisonLocked]="user?.subscription?.type === 'Basic'"
+            [isFilteredByAssetClass]="isFilteredByAssetClass"
+            [isInPercentage]="showValuesInPercentage()"
+            [isLoading]="isLoading"
+            [locale]="user?.settings?.locale"
+          />
+        </mat-card-content>
+      </mat-card>
+    </div>
     <div class="col-md-12 allocations-by-symbol">
       <mat-card appearance="outlined" class="mb-3">
         <mat-card-header class="overflow-hidden w-100">

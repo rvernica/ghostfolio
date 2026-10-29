@@ -29,6 +29,7 @@ import {
   AssetSubClass,
   DataSource
 } from '@ghostfolio/prisma/enums';
+import { GfAllocationModelComparisonComponent } from '@ghostfolio/ui/allocation-model-comparison';
 import { translate } from '@ghostfolio/ui/i18n';
 import {
   GfPortfolioProportionChartComponent,
@@ -63,6 +64,7 @@ import { AllocationsPageParams } from './interfaces/interfaces';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    GfAllocationModelComparisonComponent,
     GfPortfolioProportionChartComponent,
     GfPremiumIndicatorComponent,
     GfTopHoldingsComponent,
@@ -103,6 +105,7 @@ export class GfAllocationsPageComponent implements OnInit {
     > & { etfProvider: string; value: number };
   };
   protected impersonationId: string | null;
+  protected isFilteredByAssetClass = false;
   protected isLoading = false;
   protected markets: PortfolioDetails['markets'];
   protected marketsAdvanced: {
@@ -365,6 +368,12 @@ export class GfAllocationsPageComponent implements OnInit {
   }
 
   private initializeAllocationsData() {
+    this.isFilteredByAssetClass = this.userService
+      .getFilters()
+      .some(({ type }) => {
+        return type === 'ASSET_CLASS';
+      });
+
     for (const [
       id,
       { name, valueInBaseCurrency, valueInPercentage }

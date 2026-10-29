@@ -1,0 +1,110 @@
+@if (isFilteredByAssetClass()) {
+  <p class="allocation-model-filter-notice mb-0 text-muted" i18n>
+    Remove the asset class filter to compare your portfolio with an allocation
+    model.
+  </p>
+} @else {
+  <div class="align-items-center d-flex mb-2">
+    <small class="text-muted text-nowrap" i18n>Most conservative</small>
+    <mat-slider
+      class="flex-grow-1 mx-3"
+      [max]="maxModelIndex"
+      [min]="0"
+      [showTickMarks]="true"
+      [step]="1"
+    >
+      <input
+        matSliderThumb
+        [value]="selectedModelIndex()"
+        (valueChange)="onModelIndexChange($event)"
+      />
+    </mat-slider>
+    <small class="text-muted text-nowrap" i18n>Most aggressive</small>
+  </div>
+  <div class="allocation-model-name h5 mb-1">
+    {{ selectedModelTexts().name }}
+  </div>
+  <p class="mb-3">{{ selectedModelTexts().description }}</p>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <gf-allocation-model-chart
+        [colorScheme]="colorScheme()"
+        [locale]="locale()"
+        [model]="selectedModel()"
+      />
+    </div>
+    <div class="col-md-6 mb-3">
+      @if (isComparisonLocked()) {
+        <div class="align-items-center d-flex h-100 justify-content-center">
+          <gf-premium-indicator class="me-2" />
+          <span i18n
+            >Upgrade to Ghostfolio Premium to compare your portfolio with this
+            model.</span
+          >
+        </div>
+      } @else if (isLoading()) {
+        <ngx-skeleton-loader
+          animation="pulse"
+          [theme]="{
+            height: '1.5rem',
+            width: '100%'
+          }"
+        />
+      } @else {
+        <table class="gf-table w-100">
+          <thead>
+            <tr class="mat-mdc-header-row">
+              <th class="mat-mdc-header-cell px-1 py-2" i18n>Asset Class</th>
+              <th class="mat-mdc-header-cell px-1 py-2 text-end" i18n>
+                Current
+              </th>
+              <th class="mat-mdc-header-cell px-1 py-2 text-end" i18n>Model</th>
+              <th class="mat-mdc-header-cell px-1 py-2 text-end" i18n>
+                Difference
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track row.assetClass) {
+              <tr class="mat-mdc-row">
+                <td class="mat-mdc-cell px-1 py-2">
+                  <span
+                    class="asset-class-marker me-2"
+                    [style.background-color]="row.color"
+                  ></span
+                  >{{ row.label }}
+                </td>
+                <td class="mat-mdc-cell px-1 py-2">
+                  <gf-value
+                    position="end"
+                    [isPercent]="true"
+                    [locale]="locale()"
+                    [precision]="1"
+                    [value]="row.current"
+                  />
+                </td>
+                <td class="mat-mdc-cell px-1 py-2">
+                  <gf-value
+                    position="end"
+                    [isPercent]="true"
+                    [locale]="locale()"
+                    [precision]="1"
+                    [value]="row.model"
+                  />
+                </td>
+                <td class="mat-mdc-cell px-1 py-2 text-end">
+                  {{ row.formattedDifference }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+}
+<small class="d-block text-muted" i18n>
+  These allocation models are provided for educational purposes only and are not
+  investment advice. They are not individualized for you. Consider all of your
+  assets, income, and investments before applying any allocation model.
+</small>

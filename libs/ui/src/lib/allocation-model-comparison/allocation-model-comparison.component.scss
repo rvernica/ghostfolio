@@ -1,0 +1,10 @@
+:host {
+  display: block;
+
+  .asset-class-marker {
+    border-radius: 2px;
+    display: inline-block;
+    height: 0.75rem;
+    width: 0.75rem;
+  }
+}

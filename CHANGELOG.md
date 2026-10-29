@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added a comparison with allocation models to the allocations page
+
 ### Changed
 
 - Deprecated the `api/v1/symbol` endpoints in favor of the `api/v1/symbols` endpoints
