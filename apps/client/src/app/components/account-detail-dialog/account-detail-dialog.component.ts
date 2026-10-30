@@ -10,6 +10,7 @@ import { DATE_FORMAT, downloadAsFile } from '@ghostfolio/common/helper';
 import {
   AccountBalancesResponse,
   Activity,
+  Filter,
   LineChartItem,
   PortfolioPosition,
   User
@@ -24,6 +25,10 @@ import { GfDialogHeaderComponent } from '@ghostfolio/ui/dialog-header';
 import { GfHoldingsTableComponent } from '@ghostfolio/ui/holdings-table';
 import { translate } from '@ghostfolio/ui/i18n';
 import { GfInvestmentChartComponent } from '@ghostfolio/ui/investment-chart';
+import {
+  getHoldingsForFilter,
+  isSameHolding
+} from '@ghostfolio/ui/portfolio-filter-form';
 import { DataService } from '@ghostfolio/ui/services';
 import { GfTagsSelectorComponent } from '@ghostfolio/ui/tags-selector';
 import { GfValueComponent } from '@ghostfolio/ui/value';
@@ -38,10 +43,13 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { PageEvent } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
 import { Sort, SortDirection } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -80,8 +88,11 @@ import {
     IonIcon,
     MatButtonModule,
     MatDialogModule,
+    MatFormFieldModule,
+    MatSelectModule,
     MatTabsModule,
-    NgxSkeletonLoaderModule
+    NgxSkeletonLoaderModule,
+    ReactiveFormsModule
   ],
   selector: 'gf-account-detail-dialog',
   styleUrls: ['./account-detail-dialog.component.scss'],
@@ -100,6 +111,11 @@ export class GfAccountDetailDialogComponent implements OnInit {
   protected equityPrecision = 2;
   protected hasPermissionToDeleteAccountBalance: boolean;
   protected historicalDataItems: LineChartItem[];
+  protected readonly holdingFilter = new FormControl<PortfolioPosition | null>(
+    null
+  );
+  protected holdingFilterOptions: PortfolioPosition[] = [];
+  protected readonly isSameHolding = isSameHolding;
   protected holdings: PortfolioPosition[];
   protected interestInBaseCurrency: number;
   protected interestInBaseCurrencyPrecision = 2;
@@ -123,6 +139,7 @@ export class GfAccountDetailDialogComponent implements OnInit {
 
   protected readonly data = inject<AccountDetailDialogParams>(MAT_DIALOG_DATA);
 
+  private activityTypesFilter: string[] = [];
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly dataService = inject(DataService);
   private readonly destroyRef = inject(DestroyRef);
@@ -143,6 +160,14 @@ export class GfAccountDetailDialogComponent implements OnInit {
       )
       .subscribe(() => {
         this.dialogRef.close({ isNavigating: true });
+      });
+
+    this.holdingFilter.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.pageIndex = 0;
+
+        this.fetchActivities();
       });
 
     this.userService.stateChanged
@@ -243,6 +268,13 @@ export class GfAccountDetailDialogComponent implements OnInit {
     this.fetchActivities();
   }
 
+  protected onTypesFilterChanged(aTypes: string[]) {
+    this.activityTypesFilter = aTypes;
+    this.pageIndex = 0;
+
+    this.fetchActivities();
+  }
+
   protected showValuesInPercentage() {
     return (
       !hasScope(this.user?.scopes, scopes.portfolioReadValues) ||
@@ -332,9 +364,22 @@ export class GfAccountDetailDialogComponent implements OnInit {
   }
 
   private fetchActivities() {
+    const filters: Filter[] = [{ id: this.data.accountId, type: 'ACCOUNT' }];
+    const holding = this.holdingFilter.value;
+
+    if (holding) {
+      filters.push(
+        { id: holding.assetProfile.dataSource, type: 'DATA_SOURCE' },
+        { id: holding.assetProfile.symbol, type: 'SYMBOL' }
+      );
+    }
+
     this.dataService
       .fetchActivities({
-        filters: [{ id: this.data.accountId, type: 'ACCOUNT' }],
+        activityTypes: this.activityTypesFilter.length
+          ? this.activityTypesFilter
+          : undefined,
+        filters,
         skip: this.pageIndex * this.pageSize,
         sortColumn: this.sortColumn,
         sortDirection: this.sortDirection,
@@ -436,6 +481,24 @@ export class GfAccountDetailDialogComponent implements OnInit {
     });
   }
 
+  private fetchHoldingFilterOptions() {
+    this.dataService
+      .fetchPortfolioHoldings({
+        filters: [
+          {
+            id: this.data.accountId,
+            type: 'ACCOUNT'
+          }
+        ]
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ holdings }) => {
+        this.holdingFilterOptions = getHoldingsForFilter(holdings);
+
+        this.changeDetectorRef.markForCheck();
+      });
+  }
+
   private fetchPortfolioHoldings() {
     this.dataService
       .fetchPortfolioHoldings({
@@ -462,6 +525,7 @@ export class GfAccountDetailDialogComponent implements OnInit {
     this.fetchAccount();
     this.fetchActivities();
     this.fetchChart();
+    this.fetchHoldingFilterOptions();
     this.fetchPortfolioHoldings();
   }
 

@@ -70,6 +70,20 @@ export function getHoldingsForFilter(holdings: PortfolioPosition[] = []) {
     });
 }
 
+export function isSameHolding(
+  option: PortfolioPosition,
+  value: PortfolioPosition | null
+) {
+  if (value === null) {
+    return false;
+  }
+
+  return (
+    getAssetProfileIdentifier(option.assetProfile) ===
+    getAssetProfileIdentifier(value.assetProfile)
+  );
+}
+
 export function getPortfolioFilterFormValue(
   filters: Filter[],
   holdings: PortfolioPosition[]

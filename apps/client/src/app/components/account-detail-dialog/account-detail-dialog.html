@@ -177,6 +177,8 @@
           <div class="d-none d-sm-block ms-2" i18n>Activities</div>
         </ng-template>
         <gf-activities-table
+          class="mt-3"
+          [activityTypes]="user?.activityTypes"
           [baseCurrency]="user?.settings?.baseCurrency"
           [dataSource]="dataSource"
           [deviceType]="data.deviceType"
@@ -184,6 +186,7 @@
           [hasPermissionToCreateActivity]="data.hasPermissionToCreateActivity"
           [hasPermissionToDeleteActivity]="false"
           [hasPermissionToExportActivities]="!showValuesInPercentage()"
+          [hasPermissionToFilterByType]="true"
           [hasPermissionToOpenDetails]="false"
           [hasPermissionToUpdateActivity]="data.hasPermissionToUpdateActivity"
           [locale]="user?.settings?.locale"
@@ -201,7 +204,42 @@
           (export)="onExport()"
           (pageChanged)="onChangePage($event)"
           (sortChanged)="onSortChanged($event)"
-        />
+          (typesFilterChanged)="onTypesFilterChanged($event)"
+        >
+          @if (holdingFilterOptions.length > 1) {
+            <mat-form-field
+              appearance="outline"
+              class="gf-form-field-dense without-hint"
+            >
+              <mat-label i18n>Holding</mat-label>
+              <mat-select
+                [compareWith]="isSameHolding"
+                [formControl]="holdingFilter"
+              >
+                <mat-select-trigger>{{
+                  holdingFilter.value?.assetProfile?.name
+                }}</mat-select-trigger>
+                <mat-option [value]="null" />
+                @for (
+                  holding of holdingFilterOptions;
+                  track holding.assetProfile.dataSource +
+                    holding.assetProfile.symbol
+                ) {
+                  <mat-option [value]="holding">
+                    <div class="lh-1 text-truncate">
+                      <span>{{ holding.assetProfile.name }}</span>
+                      <br />
+                      <small class="text-body-secondary"
+                        >{{ holding.assetProfile.symbol }} ·
+                        {{ holding.assetProfile.currency }}</small
+                      >
+                    </div>
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+        </gf-activities-table>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>

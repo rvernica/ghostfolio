@@ -1,4 +1,3 @@
-import { getAssetProfileIdentifier } from '@ghostfolio/common/helper';
 import { Filter, PortfolioPosition } from '@ghostfolio/common/interfaces';
 import { AccountWithPlatform } from '@ghostfolio/common/types';
 
@@ -31,6 +30,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { GfAccountSelectorComponent } from '../account-selector/account-selector.component';
 import { translate } from '../i18n';
 import { PortfolioFilterFormValue } from './interfaces';
+import { isSameHolding } from './portfolio-filter-form.util';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -103,16 +103,9 @@ export class GfPortfolioFilterFormComponent
 
   public holdingComparisonFunction(
     option: PortfolioPosition,
-    value: PortfolioPosition
+    value: PortfolioPosition | null
   ) {
-    if (value === null) {
-      return false;
-    }
-
-    return (
-      getAssetProfileIdentifier(option.assetProfile) ===
-      getAssetProfileIdentifier(value.assetProfile)
-    );
+    return isSameHolding(option, value);
   }
 
   public ngOnChanges() {

@@ -1,7 +1,7 @@
 <div
   class="align-items-center d-flex justify-content-end justify-content-lg-between"
 >
-  <div class="d-none d-lg-flex">
+  <div class="d-none d-lg-flex gap-2">
     @if (hasPermissionToFilterByType && activityTypeOptions().length > 1) {
       <mat-form-field
         appearance="outline"
@@ -17,6 +17,7 @@
         </mat-select>
       </mat-form-field>
     }
+    <ng-content />
   </div>
 
   @if (hasPermissionToImportActivities || hasPermissionToDeleteActivity) {
